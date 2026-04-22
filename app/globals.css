@@ -2594,7 +2594,7 @@ input[type="range"]::-moz-range-track {
 
 .accordion__icon {
   color: #032b41;
-  transition: transform 1s ease;
+  transition: transform .5s ease;
 }
 
 .accordion__card--open .accordion__icon {
@@ -2602,18 +2602,18 @@ input[type="range"]::-moz-range-track {
 }
 
 .accordion__card:not(.accordion__card--open) .accordion__icon {
-  transform: rotate(540deg);
+  transform: rotate(180deg);
 }
 
 .collapse {
   max-height: 0;
   overflow: hidden;
-  transition: max-height .5s ease;
+  transition: max-height .35s ease;
 }
 
 .accordion__card--open .collapse {
+  transition: all 1s ease;
   max-height: 400px;
-  transition: all 2s ease;
 }
 
 .accordion__body {

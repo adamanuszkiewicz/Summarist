@@ -9,6 +9,13 @@ import { FaChevronUp } from "react-icons/fa";
 
   const Plan = () => {
     const [selectedPlan, setSelectedPlan] = useState("premium");
+    const isPremiumYearly = selectedPlan === "premium";
+    const ctaText = isPremiumYearly
+      ? "Start your free 7-day trial"
+      : "Start your first month";
+    const disclaimerText = isPremiumYearly
+      ? "Cancel your trial at any time before it ends, and you won’t be charged."
+      : "30-day money back guarantee, no questions asked";
 
     useEffect(() => {
       const cards = Array.from(document.querySelectorAll(".accordion__card"));
@@ -103,10 +110,10 @@ import { FaChevronUp } from "react-icons/fa";
             <div className="plan__card--cta">
               <span className="btn__wrapper">
                 <button className="plan__btn">
-                  <span>Start your free 7-day trial</span>
+                  <span>{ctaText}</span>
                 </button>
               </span>
-              <div className="plan__disclaimer">Cancel your trial at any time before it ends, and you wont be charged.</div>
+              <div className="plan__disclaimer">{disclaimerText}</div>
             </div>
             <div className="faq__wrapper">
               <div className="accordion__card accordion__card--open">
