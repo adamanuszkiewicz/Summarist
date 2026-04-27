@@ -16,8 +16,6 @@ import SignupModal from "./components/SignupModal";
 import Sidebar from "./components/Sidebar";
 import ForYou from "./forYou/page";
 
-/* #2bd97c - this is the color for the active heading*/ 
-
 export default function Home() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);

@@ -5,10 +5,12 @@ import { AiFillFileText } from "react-icons/ai";
 import { RiPlantFill } from "react-icons/ri";
 import { FaHandshake } from "react-icons/fa6";
 import { FaChevronUp } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 
   const Plan = () => {
     const [selectedPlan, setSelectedPlan] = useState("premium");
+    const router = useRouter();
     const isPremiumYearly = selectedPlan === "premium";
     const ctaText = isPremiumYearly
       ? "Start your free 7-day trial"
@@ -42,6 +44,10 @@ import { FaChevronUp } from "react-icons/fa";
 
       return () => cleanup.forEach((fn) => fn());
     }, []);
+
+    const handleGoToPayment = () => {
+      router.push(`/payment?plan=${selectedPlan}`);
+    };
 
 
     return (
@@ -109,7 +115,7 @@ import { FaChevronUp } from "react-icons/fa";
             </div>
             <div className="plan__card--cta">
               <span className="btn__wrapper">
-                <button className="plan__btn">
+                <button className="plan__btn" onClick={handleGoToPayment}>
                   <span>{ctaText}</span>
                 </button>
               </span>
