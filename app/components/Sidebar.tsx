@@ -68,7 +68,7 @@ const Sidebar = ({ isOpen, onClose, onLoginClick, showFontSizeControls = false, 
               </div>
               <div className="sidebar__link--text">For You</div>
             </a>
-            <a href="/library" className="sidebar__link--wrapper">
+            <div className="sidebar__link--wrapper sidebar__link--not-allowed">
               <div
                 className={
                   pathname === "/library"
@@ -80,7 +80,7 @@ const Sidebar = ({ isOpen, onClose, onLoginClick, showFontSizeControls = false, 
                 <CiBookmark />
               </div>
               <div className="sidebar__link--text">My Library</div>
-            </a>
+            </div>
             <div className="sidebar__link--wrapper sidebar__link--not-allowed">
               <div className="sidebar__link--line"></div>
               <div className="sidebar__icon--wrapper">
