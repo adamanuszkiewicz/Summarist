@@ -16,6 +16,7 @@ interface LoginModalProps {
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSignup, redirectTo }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('')
   const router = useRouter();
 
   const redirectIfNeeded = () => {
@@ -29,6 +30,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
 
   const handleGoogleSignIn = async () => {
     try {
+
+      setErrorMessage('');
+     
       await signInWithPopup(auth, googleProvider);
       onClose();
       redirectIfNeeded();
@@ -39,6 +43,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
 
   const handleGuestLogin = async () => {
     try {
+      setErrorMessage('');
       await signInWithEmailAndPassword(auth, "test@email.com", "test1234");
       onClose();
       redirectIfNeeded();
@@ -70,11 +75,26 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      setErrorMessage('')
       await signInWithEmailAndPassword(auth, email, password);
       onClose();
       redirectIfNeeded();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Email login error:", error);
+
+      setEmail('');
+      setPassword('');
+
+      if (
+        error.code === 'auth/invalid-credential' ||
+        error.code === 'auth/user-not-found' ||
+        error.code === 'auth/wrong-password'
+      ) {
+        setErrorMessage('email or password is incorrect');
+        return;
+      }
+
+      setErrorMessage('Unable to sign in right now. Please try again.');
     }
   };
 
@@ -105,7 +125,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
                   placeholder='Email Address' 
                   className='login__input'
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (errorMessage) {
+                      setErrorMessage('');
+                    }
+                  }}
                   required
                 />
                 <input 
@@ -113,9 +138,15 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
                   placeholder='Password' 
                   className='login__input'
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errorMessage) {
+                      setErrorMessage('');
+                    }
+                  }}
                   required
                 />
+                {errorMessage && <p className='auth__error-message'>{errorMessage}</p>}
                 <button type='submit' className='btn login__btn--wrapper'>
                   <span>Login</span>
                 </button>

@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-const PaymentSuccessPage = () => {
+const PaymentSuccessContent = () => {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
 
@@ -31,6 +31,14 @@ const PaymentSuccessPage = () => {
           <div className="plan__disclaimer">Need help? Contact support from Settings at any time.</div>
       </div>
     </div>
+  );
+};
+
+const PaymentSuccessPage = () => {
+  return (
+    <Suspense fallback={null}>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 };
 

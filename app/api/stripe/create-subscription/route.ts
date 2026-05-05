@@ -3,16 +3,16 @@ import Stripe from 'stripe';
 
 export const runtime = 'nodejs';
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-
-if (!stripeSecretKey) {
-  throw new Error('Missing STRIPE_SECRET_KEY');
-}
-
-const stripe = new Stripe(stripeSecretKey);
-
 export async function POST(request: NextRequest) {
   try {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+
+    if (!stripeSecretKey) {
+      return NextResponse.json({ error: 'Missing STRIPE_SECRET_KEY' }, { status: 500 });
+    }
+
+    const stripe = new Stripe(stripeSecretKey);
+
     const body = await request.json();
     const plan = body?.plan === 'basic' ? 'basic' : 'premium';
     const email = typeof body?.email === 'string' ? body.email.trim() : '';

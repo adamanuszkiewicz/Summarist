@@ -577,6 +577,14 @@ button:disabled {
   border: 2px solid lightgray;
 } 
 
+.auth__error-message {
+  color: #c62828;
+  font-size: 14px;
+  margin: -4px 0 12px;
+  text-align: left;
+  width: 100%;
+}
+
 .guest__btn--wrapper,
 .google__btn--wrapper,
 .login__btn--wrapper {
@@ -2063,13 +2071,12 @@ background-color: #25396b !important;
 .audio__track--wrapper {
   display: flex;
   gap: 12px;
-   width: 100%;
+  width: calc(100% / 3); /**/
 }
 
 .controls-wrapper {
   height: 100%;
   background-color: white;
-  /* border: 1px solid red; */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -2165,28 +2172,17 @@ background-color: #25396b !important;
   justify-content: center;
 }
 
-.progress__container {
-  width: 103%;
+.progress-container {
+  width: calc(100% / 3);
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
   align-items: center;
   gap: 12px;
   padding: 0 16px;
 }
 
 .slider {
-  width: 320px;
-  flex: 0 0 320px;
-}
-
-.progress-container {
   width: 100%;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
-  padding: 0 16px;
 }
 
 .duration-left,
@@ -2922,6 +2918,23 @@ input[type="range"]::-moz-range-track {
 
   .inner-book__sub--title {
     font-size: 18px;
+  }
+
+  .audio__wrapper {
+    height: 200px;
+    flex-direction: column;
+    margin: 0 auto;
+    padding: 36px 0;
+    gap: 16px;
+  }
+
+  .audio__track--wrapper {
+    align-items: center;
+    justify-content: center;
+  }
+
+  .progress-container {
+    justify-content: center;
   }
 
 }

@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { Suspense, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { CardElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js';
 // import convertToSubcurrency from '@/lib/convertToSubcurrenamount"
 type PlanType = 'premium' | 'basic';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '');
+const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim() ?? '';
+const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
 
 const cardElementOptions = {
   style: {
@@ -145,9 +146,10 @@ const CheckoutForm = ({ selectedPlan }: { selectedPlan: PlanType }) => {
   );
 };
 
-const PaymentPage = () => {
+const PaymentContent = () => {
   const searchParams = useSearchParams();
   const selectedPlan = (searchParams.get('plan') === 'basic' ? 'basic' : 'premium') as PlanType;
+  const isStripeConfigured = Boolean(stripePublishableKey);
 
   const planDetails = useMemo(() => {
     if (selectedPlan === 'premium') {
@@ -178,13 +180,31 @@ const PaymentPage = () => {
             </div>
           </div>
 
-          <Elements stripe={stripePromise}
-          >
-            <CheckoutForm selectedPlan={selectedPlan} />
-          </Elements>
+          {isStripeConfigured ? (
+            <Elements stripe={stripePromise}>
+              <CheckoutForm selectedPlan={selectedPlan} />
+            </Elements>
+          ) : (
+            <div className="plan__card plan__card--active" style={{ cursor: 'default', marginTop: '24px' }}>
+              <div className="plan__card--content">
+                <div className="plan__card--title">Checkout unavailable</div>
+                <div className="plan__card--text">
+                  Missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY. Add it in Vercel environment variables, then redeploy.
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
+  );
+};
+
+const PaymentPage = () => {
+  return (
+    <Suspense fallback={null}>
+      <PaymentContent />
+    </Suspense>
   );
 };
 

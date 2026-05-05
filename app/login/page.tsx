@@ -13,6 +13,7 @@ import { auth, googleProvider } from '../utils/firebaseConfig'
 const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
   const router = useRouter()
 
   const handleGoogleSignIn = async () => {
@@ -49,9 +50,22 @@ const Login = () => {
     try {
       await signInWithEmailAndPassword(auth, email, password)
       router.push('/forYou')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Email login error:', error)
-      alert('Login failed.')
+
+      setEmail('')
+      setPassword('')
+
+      if (
+        error.code === 'auth/invalid-credential' ||
+        error.code === 'auth/user-not-found' ||
+        error.code === 'auth/wrong-password'
+      ) {
+        setErrorMessage('email or password is incorrect')
+        return
+      }
+
+      setErrorMessage('Unable to sign in right now. Please try again.')
     }
   }
 
@@ -85,7 +99,12 @@ const Login = () => {
                       placeholder='Email Address'
                       className='login__input'
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value)
+                        if (errorMessage) {
+                          setErrorMessage('')
+                        }
+                      }}
                       required
                     />
                     <input
@@ -93,9 +112,15 @@ const Login = () => {
                       placeholder='Password'
                       className='login__input'
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value)
+                        if (errorMessage) {
+                          setErrorMessage('')
+                        }
+                      }}
                       required
                     />
+                    {errorMessage && <p className='auth__error-message'>{errorMessage}</p>}
                     <button type='submit' className='btn login__btn--wrapper '>
                       <span>Login</span>
                     </button>
