@@ -2933,6 +2933,14 @@ input[type="range"]::-moz-range-track {
     justify-content: center;
   }
 
+  .audiobook__container {
+    padding-bottom: 140px;
+  }
+
+  #audiobook .sidebar__closed {
+  height: 100vh;
+}
+
   .progress-container {
     justify-content: center;
   }
