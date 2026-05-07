@@ -3,27 +3,32 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar";
 import Searchbar from "@/app/components/Searchbar";
-import { RxHamburgerMenu } from "react-icons/rx";
 import { FaRegStar } from "react-icons/fa";
 import { TfiTimer } from "react-icons/tfi";
-import { useParams } from "next/navigation";
-import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 import { HiOutlineLightBulb } from "react-icons/hi";
 import { LiaReadme } from "react-icons/lia";
 import { IoMicOutline } from "react-icons/io5";
 import { CiBookmark } from "react-icons/ci";
 import { TbMicrophone } from "react-icons/tb";
-import AudioPlayer from "@/app/components/AudioPlayer";
 import { Book } from "@/data/tracks";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/app/utils/firebaseConfig";
+import LoginModal from "@/app/components/LoginModal";
+import SignupModal from "@/app/components/SignupModal";
 
 export default function BookPage() {
   const params = useParams();
+  const router = useRouter();
   const bookId = params.id as string;
   const [book, setBook] = useState<Book | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [audioDuration, setAudioDuration] = useState<string>("0:00");
-
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
+  const [modalRedirectTo, setModalRedirectTo] = useState<string | null>(null);
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -37,6 +42,27 @@ export default function BookPage() {
     }
     return "0:00";
   };
+
+
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      const loggedIn = Boolean(user);
+      setIsLoggedIn(loggedIn);
+
+      if (loggedIn) {
+        setIsLoginModalOpen(false);
+        setIsSignupModalOpen(false);
+        return;
+      }
+
+      setModalRedirectTo(null);
+      setIsSignupModalOpen(false);
+      setIsLoginModalOpen(true);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     async function fetchBook() {
@@ -57,6 +83,41 @@ export default function BookPage() {
       fetchBook();
     }
   }, [bookId]);
+
+
+  const handleCloseModal = () => {
+    setIsLoginModalOpen(false);
+    setIsSignupModalOpen(false);
+    setModalRedirectTo(null);
+  };
+
+  const handleSwitchToSignup = () => {
+    setIsLoginModalOpen(false);
+    setIsSignupModalOpen(true);
+  };
+
+  const handleSwitchToLogin = () => {
+    setIsSignupModalOpen(false);
+    setIsLoginModalOpen(true);
+  };
+
+  const handleStartPlayer = () => {
+    if (!book) {
+      return;
+    }
+
+    if (isLoggedIn) {
+      router.push(`/book/${book.id}/player`);
+      return;
+    }
+
+    setModalRedirectTo(`/book/${book.id}/player`);
+    setIsLoginModalOpen(true);
+  };
+
+
+
+
 
   if (isLoading) {
     return (
@@ -109,6 +170,18 @@ export default function BookPage() {
 
   return (
     <div>
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={handleCloseModal}
+        onSwitchToSignup={handleSwitchToSignup}
+        redirectTo={modalRedirectTo}
+      />
+      <SignupModal
+        isOpen={isSignupModalOpen}
+        onClose={handleCloseModal}
+        onSwitchToLogin={handleSwitchToLogin}
+        redirectTo={modalRedirectTo}
+      />
       <div id="book-info">
         <Sidebar
           isOpen={isSidebarOpen}
@@ -116,114 +189,148 @@ export default function BookPage() {
         />
         <div className="inner-book__main-content">
           <Searchbar toggleSidebar={toggleSidebar} />
-          <div className="inner__book--row">
-            <audio
-              src={currentBook.audioLink}
-              onLoadedMetadata={(e) => {
-                const audio = e.currentTarget;
-                setAudioDuration(formatTime(audio.duration));
-              }}
-            ></audio>
-            <div className="inner__book--container">
-              <div className="inner__book--inner-wrapper">
-                <div className="inner__book">
-                  <div className="inner-book__title">{currentBook.title}</div>
-                  <div className="inner-book__author">{currentBook.author}</div>
-                  <div className="inner-book__sub--title">{currentBook.subTitle}</div>
-                  <div className="inner-book__wrapper">
-                    <div className="inner-book__description--wrapper">
-                      <div className="inner-book__description">
-                        <div className="inner-book__icon">
-                          <FaRegStar />
+          {isLoggedIn ? (
+            <div className="inner__book--row">
+              <audio
+                src={currentBook.audioLink}
+                onLoadedMetadata={(e) => {
+                  const audio = e.currentTarget;
+                  setAudioDuration(formatTime(audio.duration));
+                }}
+              ></audio>
+              <div className="inner__book--container">
+                <div className="inner__book--inner-wrapper">
+                  <div className="inner__book">
+                    <div className="inner-book__title">{currentBook.title}</div>
+                    <div className="inner-book__author">{currentBook.author}</div>
+                    <div className="inner-book__sub--title">{currentBook.subTitle}</div>
+                    <div className="inner-book__wrapper">
+                      <div className="inner-book__description--wrapper">
+                        <div className="inner-book__description">
+                          <div className="inner-book__icon">
+                            <FaRegStar />
+                          </div>
+                          <div className="inner-book__overall--rating">
+                            {currentBook.averageRating} ({currentBook.totalRating} Ratings)
+                          </div>
+                          <div className="inner-book__total--rating"></div>
                         </div>
-                        <div className="inner-book__overall--rating">
-                          {currentBook.averageRating} ({currentBook.totalRating} Ratings)
+                        <div className="inner-book__description">
+                          <div className="inner-book__icon">
+                            <TfiTimer />
+                          </div>
+                          <div className="inner-book__duration">
+                            {audioDuration}
+                          </div>
                         </div>
-                        <div className="inner-book__total--rating"></div>
-                      </div>
-                      <div className="inner-book__description">
-                        <div className="inner-book__icon">
-                          <TfiTimer />
+                        <div className="inner-book__description">
+                          <div className="inner-book__icon">
+                            <TbMicrophone />
+                          </div>
+                          <div className="inner-book__type">{currentBook.type}</div>
                         </div>
-                        <div className="inner-book__duration">
-                          {audioDuration}
-                        </div>
-                      </div>
-                      <div className="inner-book__description">
-                        <div className="inner-book__icon">
-                          <TbMicrophone />
-                        </div>
-                        <div className="inner-book__type">{currentBook.type}</div>
-                      </div>
-                      <div className="inner-book__description">
-                        <div className="inner-book__icon">
-                          <HiOutlineLightBulb />
-                        </div>
-                        <div className="inner-book__key--ideas">
-                          {currentBook.keyIdeas} key ideas
+                        <div className="inner-book__description">
+                          <div className="inner-book__icon">
+                            <HiOutlineLightBulb />
+                          </div>
+                          <div className="inner-book__key--ideas">
+                            {currentBook.keyIdeas} key ideas
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="inner-book__read--btn-wrapper">
-                    <Link href={`/book/${book.id}/player`}>
-                      <button className="inner-book__read--btn">
+                    <div className="inner-book__read--btn-wrapper">
+                      <button
+                        className="inner-book__read--btn"
+                        onClick={handleStartPlayer}
+                      >
                         <div className="inner-book__read--icon">
                           <LiaReadme />
                         </div>
                         <div className="inner-book__read--text">Read</div>
                       </button>
-                    </Link>
-                    <Link href={`/book/${book.id}/player`}>
-                      <button className="inner-book__read--btn">
+                      <button
+                        className="inner-book__read--btn"
+                        onClick={handleStartPlayer}
+                      >
                         <div className="inner-book__listen--icon">
                           <IoMicOutline />
                         </div>
                         <div className="inner-book__listen--text">Listen</div>
                       </button>
-                    </Link>
-                  </div>
-                  <div className="inner-book__bookmark">
-                    <div className="inner-book__bookmark--icon">
-                      <CiBookmark />
                     </div>
-                    <div className="inner-book__bookmark--text">
-                      Add title to My Library
+                    <div className="inner-book__bookmark">
+                      <div className="inner-book__bookmark--icon">
+                        <CiBookmark />
+                      </div>
+                      <div className="inner-book__bookmark--text">
+                        Add title to My Library
+                      </div>
+                    </div>
+                    <h2 className="inner-book__secondary--title">
+                      What's it about?
+                    </h2>
+                    <div className="inner-book__tags--wrapper">
+                      {currentBook.tags &&
+                        currentBook.tags.map((tag, index) => (
+                          <div key={index} className="inner-book__tag">
+                            {tag}
+                          </div>
+                        ))}
+                    </div>
+                    <div className="inner-book__book--description">
+                      {currentBook.bookDescription}
+                    </div>
+                    <h2 className="inner-book__secondary--title">
+                      About the author
+                    </h2>
+                    <div className="inner-book__author--description">
+                      {currentBook.authorDescription}
                     </div>
                   </div>
-                  <h2 className="inner-book__secondary--title">
-                    What's it about?
-                  </h2>
-                  <div className="inner-book__tags--wrapper">
-                    {currentBook.tags &&
-                      currentBook.tags.map((tag, index) => (
-                        <div key={index} className="inner-book__tag">
-                          {tag}
-                        </div>
-                      ))}
+                  <div className="inner-book__image--wrapper">
+                    <figure className="book__image--wrapper">
+                      <img
+                        className="book__image"
+                        src={currentBook.imageLink}
+                        alt={currentBook.title}
+                      />
+                    </figure>
                   </div>
-                  <div className="inner-book__book--description">
-                    {currentBook.bookDescription}
-                  </div>
-                  <h2 className="inner-book__secondary--title">
-                    About the author
-                  </h2>
-                  <div className="inner-book__author--description">
-                    {currentBook.authorDescription}
-                  </div>
-                </div>
-                <div className="inner-book__image--wrapper">
-                  <figure className="book__image--wrapper">
-                    <img
-                      className="book__image"
-                      src={currentBook.imageLink}
-                      alt={currentBook.title}
-                    />
-                  </figure>
                 </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="login__wrapper">
+              <div className="login__container">
+                <div className="login__row">
+                  <h1 className="login__title">Book</h1>
+                  <div className="settings__login--wrapper">
+                    <figure className="login__image">
+                      <img
+                        className="login__img"
+                        src="/assets/login.png"
+                        alt="Login illustration"
+                      />
+                    </figure>
+                    <div className="settings__login--text">
+                      Log in to your account to see your details.
+                    </div>
+                    <button
+                      type="button"
+                      className="btn settings__login--btn"
+                      onClick={() => {
+                        setModalRedirectTo(null);
+                        setIsLoginModalOpen(true);
+                      }}
+                    >
+                      Login
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
