@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { IoMdPerson } from "react-icons/io";
-import { signInWithPopup, signInWithEmailAndPassword, signInAnonymously, createUserWithEmailAndPassword } from 'firebase/auth';
+import { FirebaseError } from 'firebase/app';
+import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from 'firebase/auth';
 import { auth, googleProvider } from '../utils/firebaseConfig';
 
 interface LoginModalProps {
@@ -79,19 +80,48 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
       await signInWithEmailAndPassword(auth, email, password);
       onClose();
       redirectIfNeeded();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Email login error:", error);
 
       setEmail('');
       setPassword('');
 
-      if (
-        error.code === 'auth/invalid-credential' ||
-        error.code === 'auth/user-not-found' ||
-        error.code === 'auth/wrong-password'
-      ) {
-        setErrorMessage('email or password is incorrect');
-        return;
+      if (error instanceof FirebaseError) {
+        if (
+          error.code === 'auth/invalid-credential' ||
+          error.code === 'auth/user-not-found' ||
+          error.code === 'auth/wrong-password'
+        ) {
+          const methods = await fetchSignInMethodsForEmail(auth, email);
+
+          if (methods.includes('google.com') && !methods.includes('password')) {
+            setErrorMessage('This email is registered with Google. Use Login with Google instead.');
+            return;
+          }
+
+          if (methods.includes('password')) {
+            setErrorMessage('That password is incorrect for this email account.');
+            return;
+          }
+
+          setErrorMessage('No email/password account exists for this email. Sign up first or use the correct provider.');
+          return;
+        }
+
+        if (error.code === 'auth/invalid-email') {
+          setErrorMessage('Enter a valid email address.');
+          return;
+        }
+
+        if (error.code === 'auth/operation-not-allowed') {
+          setErrorMessage('Email/password sign-in is not enabled in Firebase Authentication.');
+          return;
+        }
+
+        if (error.code === 'auth/too-many-requests') {
+          setErrorMessage('Too many attempts. Please wait a moment and try again.');
+          return;
+        }
       }
 
       setErrorMessage('Unable to sign in right now. Please try again.');

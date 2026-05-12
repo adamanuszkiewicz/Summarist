@@ -683,7 +683,7 @@ background-color: #25396b !important;
   bottom: 50;
   background-color: rgb(246, 243, 243);
   color: #116be9;
-  cursor: not-allowed;
+  /* cursor: not-allowed; */
 }
 
 .auth__switch--btn-2 {
